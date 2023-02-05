@@ -1,0 +1,9 @@
+char* strdup(char *s)
+{
+    char* p;
+    p=(char*)malloc(strlen(s)+1);
+    if(p!=NULL)
+      strcpy(p,s);
+    return p;  /*문자 s를 복사하고 복사된 문자열을 가리키는 포인터를 동적할당해서 반환. 
+    
+}
