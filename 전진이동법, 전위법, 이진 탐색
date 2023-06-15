@@ -1,0 +1,73 @@
+Node* SLL_MoveToFront(Node** Head,int Target){
+	Node* Current=(*Head);
+	Node*Previous =NULL;
+	Node* Match= NULL;
+	
+	while(Current != NULL){
+		if(Current->Data == Target){
+			Match = Current;
+			if(Previous!=NULL){
+				Previous->NextNode = Current->NextNode;
+				Current->NextNode = (*Head);
+				(*Head)=Current;
+			}
+			break;
+		}
+		else{
+			Previous = Current;
+			Current = Current->NextNode;
+			
+		}
+	}
+	return Match;
+}
+
+Node* SLL_Transpose(Node** Head,int Target){
+	Node* Current =(*Head);
+	Node* PPrevious = NULL;
+	Node* Previous = NULL;
+	Node* Match = NULL;
+	
+	while(Current != NULL){
+		if(Current->Data == Target){
+			Match = Current;
+			if(Previous != NULL){
+				if(PPrevious != NULL)
+					PPrevious->NextNode = Current;
+				else  //PPrevious가 없다는 거니까
+					(*Head) = Current;
+				
+				Previous->NextNode = Current->NextNode; //새로 바뀐거로
+				Current->NextNode =Previous; //새로 바뀐거로
+				
+			}
+			break;
+		}
+		else{
+			if(Previous != NULL) // 이게 있어야 되나
+				PPrevious = Previous;
+			Previous = Current;
+			Current= Current->NextNode;
+		}
+	}
+	return Match;
+}
+
+ELementType BinarySearch (Score ScoreList[],int Size, ElementType Target){
+	int Left, Right, Mid;
+	Left=0;
+	Right =Size-1;
+	
+	while(Left<=Right){
+		Mid = (Left+Right) /2;
+		
+		if(Target == Score[Mid].score)
+			return &(ScoreList[Mid]);
+		else if (Target> ScoreList[Mid].score)
+			Left= Mid+1;
+		else 
+			Right = Mid-1;
+	}
+	
+	return NULL;
+}
