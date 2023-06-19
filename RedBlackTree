@@ -1,0 +1,301 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+typedef int ElementType;
+
+typedef struct tagRBTNode{
+	struct tagRBTNode* Parent;
+	struct tagRBTNode* Left;
+	struct tagRBTNode* Right;
+	
+	enum{ RED, BLACK } COLOR;
+	
+	ELementType Data;
+}RBTNode;
+
+void RBT_DestroyTree(RBTNode* Tree);
+
+RBTNode* RBT_CreateNode(ELementType NewData);
+void RBT_DestroyNode(RBTNode* Node);
+
+RBTNode* RBT_SearchNode(RBTNode* Tree, ELementType Target);
+RBTNode* RBT_SearchMinNode(RBTNode* Tree);
+void RBT_InsertNode(RBTNode** Tree, RBTNode *NewNode);
+void RBT_InsertNodeHelper(RBTNode** Tree, RBTNode *NewNode);
+RBTNode* RBT_RemoveNode(RBTNode** Root , ELementType Target);
+void RBT_RebuildAfterInsert(RBTNode** Tree, RBTNode* NewNode);
+void RBT_RebuildAfterRemove(RBTNode** Root, RBTNode* X);
+
+void RBT_PrintTree(RBTNode* Node,int Depth,int BlackCount);
+void RBT_RotateLeft(RBTNode** Root,RBTNode* Parent);
+void RBT_RotateRight(RBTNode** Root,RBTNode* Parent);
+
+RBTNode* Nil;
+
+RBTNode* RBT_CreateNode(ElementType NewData){
+	RBTNode* NewNode = (RBTNode*)malloc(sizeof(RBTNode));
+	NewNode->Parent= NULL;
+	NewNode->Left = NULL;
+	NewNode->Right = NULL;
+	NewNode->Data = NewData;
+	NewNode->Color = BLACK;
+	
+	return NewNode;
+}
+
+void RBT_DestroyNode(RBTNode* Node){
+	free(Node);
+}
+
+void RBT_DestroyTree(RBTNode* Tree)
+{
+	if(Tree->Right !=Nil)
+		RBT_DestroyTree(Tree->Right);
+	
+	if(Tree->Left != Nil)
+		RBT_DestroyTree(Tree->Left);
+	
+	Tree->Left = Nil;
+	Tree->Right = Nil;
+	
+	RBT_DestroyNode(Tree);
+}
+
+RBTNode* RBT_SearchNode(RBTNode* Tree, ElementType Target){
+	if(Tree == Nil)
+		return NULL;
+	
+	if(Tree->Data > Target)
+		return RBT_SearchNode(Tree->Left,Target);
+	else if(Tree->Data < Target)
+		return RBT_SearchNode(Tree->Right, Target);
+	else
+		return Tree;
+}
+
+RBTNode* RBT_SearchMinNode(RBTNode* Tree){
+	if(Tree == Nil)
+		return Nil;
+	if(Tree->Left == Nil)
+		return Tree;
+	else
+		return RBT_SearchMinNode(Tree->Left);
+}
+
+
+
+void RBT_RotateRight(RBTNode** Root, RBTNode* Parent){
+	RBTNode* LeftChild = Parent->Left;
+	
+	Parent->Left = LeftChild->Right;
+	
+	if(LeftChild->Right != Nil)
+		LeftChild->Right->Parent = Parent;
+	
+	LeftChild->Parent = Parent->Parent;  //부모 갈아끼우는거
+	
+	if(Parent->Parent == NULL)
+		(*Root) =LeftChild;
+	else{
+		if(Parent == Parent->Parent->Left)
+			Parent->Parent->Left = LeftChild;
+		else
+			Parent->Parent->Right = LeftChild;
+	}
+	
+	LeftChild->Right = Parent;
+	Parent->Parent = LeftChild;
+}
+
+void RBT_RotateLeft(RBTNode** Root, RBTNode* Parent){
+	RBTNode* RightChild = Parent->Right;
+	
+	Parent->Right = RightChild->Left;
+	
+	if(RightChild->Left != Nil)
+		RightChild->Left->Parent = Parent;
+	
+	RightChild->Parent = Parent->Parent;  //부모 갈아끼우는거
+	
+	if(Parent->Parent == NULL)
+		(*Root) =RightChild;
+	else{
+		if(Parent == Parent->Parent->Left)
+			Parent->Parent->Left = RightChild;
+		else
+			Parent->Parent->Right = RightChild;
+	}
+	
+	RightChild->Left = Parent;
+	Parent->Parent = RightChild;
+}
+
+void RBT_InsertNode (RBTNode** Tree, RBTNode* NewNode){
+	RBT_InsertNodeHelper(Tree, NewNode);
+	
+	NewNode->Color = RED;
+	NewNode->Left = Nil;
+	NewNode->Right = Nil;
+	
+	RBT_RebuildAfterInsert(Tree, NewNode);
+}
+
+void RBT_InsertNodeHelper(RBTNode** Tree, RBTNode* NewNode){
+	if((*Tree) == NULL)
+		(*Tree)= NewNode;
+	
+	if((*Tree)->Data < NewNode->Data ){
+		if((*Tree)->Right == Nil){
+			(*Tree)->Right = NewNode;
+			NewNode->Parent = (*Tree);
+		}
+		else
+			RBT_InsertNodeHelper(&(*Tree)->Right, NewNode);
+	}
+	
+	else if((*Tree)->Data > NewNode->Data)
+	{
+		if((*Tree)->Left == Nil){
+			(*Tree)->Left = NewNode;
+			NewNode->Parent = (*Tree);
+		}	
+		else
+			RBT_InsertNodeHelper(&(*Tree)->Left,NewNode);
+	}
+}
+
+
+void RBT_RebuildAfterInsert(RBTNode** Root, RBTNode* X){
+	while( X !=(*Root) && X->Parent->Color == RED){
+		if(X->Parent == X->Parent->Parent->Left){
+			RBTNode* Uncle = X->Parent->Parent->Right;
+			if(Uncle->Color == RED){ //1. 삼촌도 빨간색인 경우
+				X->Parent->Color = BLACK;
+				Uncle->Color = BLACK;
+				X->Parent->Parent->Color = RED;
+				
+				X= X->Parent->Parent; // 할아버지 노드를 새로 삽입한 노드로 간주하고 4번 규칙 위반하는지 따짐.
+			}
+			else{  
+				if(X == X->Parent->Right) //2.삼촌이 검은색이고 X가 오른쪽 자식인 경우
+				{
+					X = X->Parent;
+					RBT_RotateLeft(Root,X);//부모 기준으로 좌회전
+				}
+				X->Parent->Color = BLACK; // 3.삼촌이 검은색이며 새로 삽입한 노드가 부모 노드의 왼쪽 자식인 경우
+				X->Parent->Parent->Color = RED;
+				
+				RBT_RotateRight(Root, X->Parent->Parent);
+			}
+		}
+		else{//부모가 할아버지의 오른쪽 자식인 경우
+			RBTNode* Uncle = X->Parent->Parent->Left;
+			if(Uncle->Color == RED){
+				X->Parent->Color = BLACK;
+				Uncle->Color = BLACK;
+				X->Parent->Parent->Color = RED;
+				
+				X=X->Parent->Parent;
+			}
+			else{
+				if(X == X->Parent->Left){
+					X=X->Parent;
+					RBT_RotateRight(Root,X);
+				}
+				X->Parent->Color = BLACK;
+				X->Parent->Parent->Color = RED;
+				
+				RBT_RotateLeft(Root, X->Parent->Parent);
+			}
+		}
+	}
+	
+	(*Root)->Color = BLACK;
+}
+
+void RBT_RebuildAfterRemove(RBTNode** Root, RBTNode* Successor){   //Successor 대체 노드가 이중 흑색노드
+	RBTNode* Sibling = NULL;
+	
+	while(Successor->Parent != NULL && Successor->Color == Black){ //뿌리 노드이거나 빨간색 노드로 검은색이 넘어가면 루프 종료
+		if(Successor== Successor->Parent->Left) //이중 륵색 노드가 부모 노드의 왼쪽 자식인 경우
+		{
+			Sibling = Successor ->Parent->Right; //1.형제가 빨간색인 경우
+			if(Sibling->Color == RED){
+				Sibling->Color = BLACK;
+				Successor->Parent->Color = RED;
+				RBT_RotateLeft(Root, Successor->Parent);
+			}
+			else{     								//형제가 검은색이며
+				if(Sibling->Left->Color == BLACK  && 
+				   Sibling->Right->Color == BLACK)  //양쪽 자식이 모두 검은색
+				{
+					Sibling->Color = RED;
+					Successor = Successor->Parent;
+				}	
+				else{    
+					if(Sibling->Left->Color == RED)  //왼쪽 자식이 빨간색인 경우 형제는 어차피 검은색
+					{
+						Sibling->Left->Color = BLACK;
+						Sibling->Color = RED;
+						
+						RBT_RotateRight(Root, Sibling);
+						Sibling = Successor->Parent->Right;
+					}
+					
+					Sibling->Color = Successor->Parent->Color;
+					Successor->Parent->Color = BLACK;
+					Sibling->Right->Color = BLACK;
+					RBT_RotateLeft(Root, Successor->Parent);
+					Successor= (*Root);
+				}
+			}
+		}
+		else{ //이중 흑색 노드가 부모 노드의 오른쪽 자식인 경우
+			
+		}
+	}
+	
+	Successor->Color = BLACK;
+}
+
+RBTNode* RBT_RemoveNode(RBTNode** Root, ELementType Data){
+	RBTNode* Removed = NULL;
+	RBTNode* Successor = NULL;
+	RBTNode* Target = RBT_SearchNode((*Root),Data);
+	
+	if(Target == NULL)
+		return NULL;
+	
+	if(Target->Left == Nil || Target->Right == Nil){
+		Removed = Target;
+	}
+	else{
+		Removed = RBT_SearchMinNode(Target->Right);
+		Target->Data = Removed->Data;
+	}
+	
+	if(Removed->Left != Nil)
+		Successor = Removed->Left;
+	else
+		Successor= Removed->Right;
+	
+	Successor->Parent = Removed->Parent;
+	
+	if(Removed->Parent == NULL)
+		(*Root)=Successor;
+	else{
+		if(Removed == Removed->Parent->Left)
+			Removed->Parent->Left =Successor;
+		else
+			Removed->Parent->Right = Successor;
+	}
+	
+	if(Removed->Color == BLACK)
+		RBT_RebuildAfterRemove(Root,Successor);
+	
+	return Removed;
+}
+
+
