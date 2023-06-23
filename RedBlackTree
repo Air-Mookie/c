@@ -10,21 +10,21 @@ typedef struct tagRBTNode{
 	struct tagRBTNode* Left;
 	struct tagRBTNode* Right;
 	
-	enum{ RED, BLACK } COLOR;
+	enum{ RED, BLACK } Color;
 	
-	ELementType Data;
+	ElementType Data;
 }RBTNode;
 
 void RBT_DestroyTree(RBTNode* Tree);
 
-RBTNode* RBT_CreateNode(ELementType NewData);
+RBTNode* RBT_CreateNode(ElementType NewData);
 void RBT_DestroyNode(RBTNode* Node);
 
-RBTNode* RBT_SearchNode(RBTNode* Tree, ELementType Target);
+RBTNode* RBT_SearchNode(RBTNode* Tree, ElementType Target);
 RBTNode* RBT_SearchMinNode(RBTNode* Tree);
 void RBT_InsertNode(RBTNode** Tree, RBTNode *NewNode);
 void RBT_InsertNodeHelper(RBTNode** Tree, RBTNode *NewNode);
-RBTNode* RBT_RemoveNode(RBTNode** Root , ELementType Target);
+RBTNode* RBT_RemoveNode(RBTNode** Root , ElementType Target);
 void RBT_RebuildAfterInsert(RBTNode** Tree, RBTNode* NewNode);
 void RBT_RebuildAfterRemove(RBTNode** Root, RBTNode* X);
 
@@ -218,7 +218,7 @@ void RBT_RebuildAfterInsert(RBTNode** Root, RBTNode* X){
 void RBT_RebuildAfterRemove(RBTNode** Root, RBTNode* Successor){   //Successor 대체 노드가 이중 흑색노드
 	RBTNode* Sibling = NULL;
 	
-	while(Successor->Parent != NULL && Successor->Color == Black){ //뿌리 노드이거나 빨간색 노드로 검은색이 넘어가면 루프 종료
+	while(Successor->Parent != NULL && Successor->Color == BLACK){ //뿌리 노드이거나 빨간색 노드로 검은색이 넘어가면 루프 종료
 		if(Successor== Successor->Parent->Left) //이중 륵색 노드가 부모 노드의 왼쪽 자식인 경우
 		{
 			Sibling = Successor ->Parent->Right; //1.형제가 빨간색인 경우
@@ -260,7 +260,7 @@ void RBT_RebuildAfterRemove(RBTNode** Root, RBTNode* Successor){   //Successor �
 	Successor->Color = BLACK;
 }
 
-RBTNode* RBT_RemoveNode(RBTNode** Root, ELementType Data){
+RBTNode* RBT_RemoveNode(RBTNode** Root, ElementType Data){
 	RBTNode* Removed = NULL;
 	RBTNode* Successor = NULL;
 	RBTNode* Target = RBT_SearchNode((*Root),Data);
@@ -299,3 +299,117 @@ RBTNode* RBT_RemoveNode(RBTNode** Root, ELementType Data){
 }
 
 
+void RBT_PrintTree(RBTNode* Node , int Depth , int BlackCount){
+	int i=0;
+	char c = 'X';
+	int v =-1;
+	char cnt[100];
+	
+	if(Node == NULL || Node == Nil)
+		return;
+	
+	if(Node->Color == BLACK)
+		BlackCount++;
+	
+	if(Node->Parent != NULL)
+	{
+		v= Node->Parent->Data;
+		
+		if(Node->Parent->Left == Node)
+			c='L';
+		else
+			c='R';
+	}
+	if(Node->Left ==Nil && Node->Right == Nil)
+		sprintf(cnt,"--------- %d",BlackCount );
+	else{
+		strncpy(cnt, "",sizeof(cnt));
+		
+	}
+	
+	for(i=0;i<Depth;i++)
+		printf(" ");
+	
+	printf(" %d %s [%c,%d] %s\n",Node->Data,(Node->Color == RED)?"RED":"BLACK",c,v,cnt);
+	
+	RBT_PrintTree(Node->Left, Depth+1,BlackCount);
+	RBT_PrintTree(Node->Right,Depth+1,BlackCount);
+	
+	
+}
+
+
+
+int main(void){
+	RBTNode* Tree = NULL;
+	RBTNode* Node = NULL;
+	
+	Nil = RBT_CreateNode(0);
+	Nil->Color = BLACK;
+	
+	while(1){
+		int cmd =0;
+		int param =0;
+		char buffer[10];
+		
+		printf("Enter command number :\n");
+		printf("(1) Create a node, (2) Remove a node, (3) Search a Node\n");
+		printf("(4) Display Tree (5)quit\n");
+		printf("command number:");
+		
+		fgets(buffer, sizeof(buffer)-1,stdin);
+		sscanf(buffer, "%d", &cmd);
+		
+		if(cmd<1 || cmd>5){
+			printf("Invalid command number.\n");
+			continue;
+		}
+		
+		else if(cmd ==4){
+			RBT_PrintTree(Tree,0,0);
+			printf("\n");
+			continue;
+		}
+		else if(cmd ==5)
+			break;
+		
+		
+		printf("Enter parameter (1~200) :\n");
+		
+		fgets(buffer, sizeof(buffer)-1, stdin);
+		sscanf(buffer, "%d", &param);
+		
+		if(param<1 || param >200)
+		{
+			printf("Invaild parameter.%d\n",param);
+			continue;
+		}
+		
+		switch(cmd){
+			case 1:
+				RBT_InsertNode(&Tree, RBT_CreateNode(param));
+				break;
+			case 2:	
+				Node = RBT_RemoveNode(&Tree,param);
+				
+				if(Node == NULL)
+					printf("Not found node to delete:%d\n",param);
+				else
+					RBT_DestroyNode(Node);
+				
+				break;
+			case 3:
+				Node = RBT_SearchNode(Tree,param);
+				
+				if(Node == NULL)
+					printf("Not found node:%d\n",param);
+				else
+					printf("Found Node: %d(Color:%s)\n",Node->Data,(Node->Color==RED)?"RED":"BLACK");
+				break;
+		}
+		printf("\n");
+	}
+	
+	RBT_DestroyTree(Tree);
+	return 0;
+}
