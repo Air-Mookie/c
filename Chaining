@@ -125,7 +125,7 @@ int CHT_Hash(KeyType Key, int KeyLength, int TableSize){
 	int HashValue =0;
 	
 	for(i=0;i<KeyLength;i++){
-		HashValue -(HashValue<<3) + Key[i];
+		HashValue =(HashValue<<3) + Key[i];
 	}
 	
 	HashValue= HashValue % TableSize;
