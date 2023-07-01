@@ -113,7 +113,7 @@ void CHT_DestroyHashTable(HashTable* HT){
 	int i=0;
 	for(i=0;i<HT->TableSize;i++){
 		List L=HT->Table[i];
-		CHT_DestroyList(L);//어차피 재귀로 되지 않나
+		CHT_DestroyList(L);
 	}
 	free(HT->Table);
 	free(HT);
